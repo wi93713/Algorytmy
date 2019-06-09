@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using Microsoft.Maps.MapControl.WPF;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
