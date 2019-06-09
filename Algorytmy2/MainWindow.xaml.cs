@@ -25,13 +25,15 @@ namespace Algorytmy2
 	
     public partial class MainWindow : Window
     {
-		private const double GRADUATION		= 0.8;				// skalowanie na canvasie
+		private const double GRADUATION		= 0.6;				// skalowanie na canvasie
 
         private bool m_bDataTypeCity			= false;           // FALSE = POINTS, TRUE = MIASTA
 		private List<City> m_lstCity			= null;             // lista wczytanych miast/punktów
 		private List<City> m_lstUnvisitedCities = null;				// lista nnieodwiedzonych Miast - potrzebne do drugiej strasy.
 		private ArrayList[] m_arrIncidentList	= null;           // lista incydencji 
-		private int m_iMaxDistance = 7600;                      // maksymalna długość ścieżki
+        private int m_GetRandomPath = 0;                            // ustaw randomowa sciezke co x elementow
+		Random random = new Random();
+        private int m_iMaxDistance = 7600;                      // maksymalna długość ścieżki
 		private int m_iStartCity = 1;							// numer miasta początkowego (wybrane z kontrolki)
 		
 		//********* Deklaracje zmiennych tylko dla danych punktówych******************
@@ -194,6 +196,7 @@ namespace Algorytmy2
             canvas.Children.Add(line1);
 
         }
+
 		private void Oblicz_Click(object sender, RoutedEventArgs e)
 		{
             //string ComboHeurystyka = (string)heurystyka.SelectedItem.ToString();
@@ -202,10 +205,12 @@ namespace Algorytmy2
            // string w_distance = textBox.Text; // dystans pobrany z okna
             m_iMaxDistance = Int32.Parse(textBox.Text);
             Path newPath = MetodaGreedy();
-            Path modifiedPath = LocalSearch(newPath);
-
-            DrawLines(modifiedPath.m_lstVisitedCities, Brushes.Blue);
-            ShowPath(modifiedPath);
+             Path modifiedPath = LocalSearch(newPath);
+            Path modifiedPath2  = GreedyLocalSearch2(500);
+			if (modifiedPath2.m_dSumProfit > modifiedPath.m_dSumProfit) 
+				DrawLines(modifiedPath2.m_lstVisitedCities, Brushes.Blue);
+			else	
+				DrawLines(modifiedPath.m_lstVisitedCities, Brushes.Blue);
             //Console.WriteLine(ComboHeurystyka);
             //Console.WriteLine(ComboPunktStartowy);
             //Console.WriteLine(w_distance);
@@ -213,25 +218,31 @@ namespace Algorytmy2
 
         }
 
-        private void ShowPath(Path path)
+
+        private Path GreedyLocalSearch2(int numberOfRouts)
         {
-            List<City> cities = path.m_lstVisitedCities;
-            double distance = path.m_dSumDistance;
-            double profit = path.m_dSumProfit;
-            string displayedPath="Trasa 1: ";
-            foreach(City city in cities)
+            // conctruct N routes then find best one and take localsearch on it
+            List<Path> routs = new List<Path>();
+            for (int i = 0; i < numberOfRouts; i++)
             {
-                displayedPath += city.m_iNumber.ToString() + ' ';
+                routs.Add(MetodaGreedyRand());
             }
-            displayedCities.Content = displayedPath;
-            displayedOther.Content = "Profit : " + profit + "\nDystans : " + distance;
-            displayedOther.Visibility = Visibility.Visible;
-            displayedCities.Visibility = Visibility.Visible;
+            Path best = routs.ElementAt(0);
+
+            foreach (Path r in routs)
+            {
+                if (r.m_dSumProfit > best.m_dSumProfit)
+                {
+                    best = r;
+                }
+            }
+            best = LocalSearch(best);
+            return best;
         }
 
-		///////////////////////////////////////////////////////////////////////////////
-		// Zachłanna zwraca
-		private Path MetodaGreedy()
+        ///////////////////////////////////////////////////////////////////////////////
+        // Zachłanna zwraca
+        private Path MetodaGreedy()
 		{ 
 			double distance = 0;
             double profit = 0;
@@ -268,9 +279,44 @@ namespace Algorytmy2
             return new Path(path, distance, profit, lstUnvisdCit);
 		}
 
-		///////////////////////////////////////////////////////////////////////////////
-		// Wyszukujemy najlepsze miasto dzieląc profit przez dystans (wykład 4 p.10)
-		private City GetBestCity(City current, List<City> unvistedNodes)
+        ///////////////////////////////////////////////////////////////////////////////
+        // Zachłanna zwraca
+        private Path MetodaGreedyRand()
+        {
+            double distance = 0;
+            double profit = 0;
+            int iDistMax = m_iMaxDistance;
+            List<City> path = new List<City>();					// route
+            List<City> lstUnvisdCit = new List<City>(m_lstCity);	// nieodwiedzone miasta
+            City currentCity = m_lstCity.ElementAt(m_iStartCity);
+            path.Add(currentCity);   //add start point to route
+            lstUnvisdCit.Remove(currentCity);
+
+            while (distance < m_iMaxDistance)
+            {
+                City bestCity = GetBestCityRandom(currentCity, lstUnvisdCit, distance); // Znajdz najlepsze miasto profit/distance
+				if (bestCity != null)
+				{
+					distance = distance + m_arrDistances[currentCity.m_iNumber, bestCity.m_iNumber];
+					profit = profit + bestCity.m_dProfit;
+					path.Add(bestCity);
+					lstUnvisdCit.Remove(bestCity);
+					currentCity = bestCity;
+					m_GetRandomPath++;
+				}
+				else
+					break;
+            }
+            path.Add(path.ElementAt(0));
+            distance = distance + m_arrDistances[path.ElementAt(path.Count() - 2).m_iNumber, path.ElementAt(path.Count() - 1).m_iNumber];
+            m_lstUnvisitedCities = lstUnvisdCit;
+
+            return new Path(path, distance, profit, lstUnvisdCit);
+        }
+
+        ///////////////////////////////////////////////////////////////////////////////
+        // Wyszukujemy najlepsze miasto dzieląc profit przez dystans (wykład 4 p.10)
+        private City GetBestCity(City current, List<City> unvistedNodes)
         {
             City best = new City();
             double bestProfit = 0;
@@ -291,9 +337,67 @@ namespace Algorytmy2
 
             return best;
         }
-		///////////////////////////////////////////////////////////////////////////////
-		// Sprawdzamy czy mozemy dojść do puntu startowego
-		private bool CheckDistance(double currentDistance, double maxDistance, City current, City next, City start)
+
+        ///////////////////////////////////////////////////////////////////////////////
+        // Wyszukujemy najlepsze miasto + co 18 raz random
+        private City GetBestCityRandom(City current, List<City> lstUnvisitedCities, double dCurrentDistance)
+        {
+			City best = null ;
+            double bestProfit = 0;
+            foreach (var n in lstUnvisitedCities)
+            {
+                if (current != n)
+                {
+					if (m_GetRandomPath == 15)
+					{
+						best = GetShortestWayNode(current, lstUnvisitedCities, dCurrentDistance);
+						m_GetRandomPath = 0;
+						return best;
+					}
+					if (m_arrDistances[current.m_iNumber, n.m_iNumber] != double.MaxValue)
+                    {
+                        if ((n.m_dProfit) / (m_arrDistances[current.m_iNumber, n.m_iNumber]) > bestProfit && 
+							( m_arrDistances[current.m_iNumber, n.m_iNumber] + m_arrDistances[m_iStartCity, n.m_iNumber] + dCurrentDistance  <= m_iMaxDistance) )
+                        {
+                            best = n;
+                            bestProfit = (n.m_dProfit) / (m_arrDistances[current.m_iNumber, n.m_iNumber]);                     
+                        }
+                    }
+                }
+            }
+
+            return best;
+        }
+
+        private City GetShortestWayNode(City current, List<City> unvisitedCities, double dCurrentDistance)
+        {
+            double bestDist = double.MaxValue;
+			City bestCity = null;
+			List<City> lstRandom = new List<City>();
+            foreach (var n in unvisitedCities)
+            {
+				if (current != n)
+				{
+					if (n.m_dProfit == 0)
+						continue;
+					if( bestDist > m_arrDistances[current.m_iNumber, n.m_iNumber])
+					if (m_iMaxDistance >= dCurrentDistance + m_arrDistances[current.m_iNumber, n.m_iNumber] + m_arrDistances[n.m_iNumber, m_iStartCity])
+					{
+						bestDist = m_arrDistances[current.m_iNumber, n.m_iNumber];
+						lstRandom.Add(n);
+					}
+				}
+            }
+			if (lstRandom.Count > 0)
+			{
+				int iSize = lstRandom.Count() - 1;
+				bestCity = lstRandom.ElementAt(random.Next(0, iSize));
+			}
+			return bestCity;
+        }
+        ///////////////////////////////////////////////////////////////////////////////
+        // Sprawdzamy czy mozemy dojść do puntu startowego
+        private bool CheckDistance(double currentDistance, double maxDistance, City current, City next, City start)
         {
             if (m_arrDistances[current.m_iNumber, next.m_iNumber] + currentDistance < maxDistance)
             {
@@ -437,7 +541,7 @@ namespace Algorytmy2
             List<City> tempPath = new List<City>();
            
             List<City> unvisited = new List<City>(path.m_lstUnvisitedCities);
-			List<City> notMatch = new List<City>();
+			//List<City> notMatch = new List<City>();
 
             List<City> bestPath = new List<City>(path.m_lstVisitedCities);
             double bestProfit   = path.m_dSumProfit;
@@ -450,7 +554,7 @@ namespace Algorytmy2
                 improve = false;
                 for (int v = 0; v < unvisited.Count-1; v++)
                 {
-					notMatch = unvisited;
+					//notMatch = unvisited;
 					if(unvisited.ElementAt(v).m_dProfit == 0)
 						continue;
                     for (int i = 1; i < n - 1; i++)
@@ -461,7 +565,7 @@ namespace Algorytmy2
 							v = unvisited.Count;
 							break;
 						}
-						City bestCity = GetBestCity(bestPath.ElementAt(i), notMatch);
+						//City bestCity = GetBestCity(bestPath.ElementAt(i), notMatch);
                         newDistance = optCheckInsertNeeded(bestPath, bestDistance, unvisited.ElementAt(v).m_iNumber, i); 
                         if(newDistance <= max)
                         {
@@ -474,7 +578,7 @@ namespace Algorytmy2
                         }
 						else
 						{
-							notMatch.Remove(bestCity);
+							//notMatch.Remove(bestCity);
 						}
                     }
                 }      
