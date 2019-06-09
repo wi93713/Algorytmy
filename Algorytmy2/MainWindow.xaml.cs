@@ -205,11 +205,28 @@ namespace Algorytmy2
             Path modifiedPath = LocalSearch(newPath);
 
             DrawLines(modifiedPath.m_lstVisitedCities, Brushes.Blue);
+            ShowPath(modifiedPath);
             //Console.WriteLine(ComboHeurystyka);
             //Console.WriteLine(ComboPunktStartowy);
             //Console.WriteLine(w_distance);
 
 
+        }
+
+        private void ShowPath(Path path)
+        {
+            List<City> cities = path.m_lstVisitedCities;
+            double distance = path.m_dSumDistance;
+            double profit = path.m_dSumProfit;
+            string displayedPath="Trasa 1: ";
+            foreach(City city in cities)
+            {
+                displayedPath += city.m_iNumber.ToString() + ' ';
+            }
+            displayedCities.Content = displayedPath;
+            displayedOther.Content = "Profit : " + profit + "\nDystans : " + distance;
+            displayedOther.Visibility = Visibility.Visible;
+            displayedCities.Visibility = Visibility.Visible;
         }
 
 		///////////////////////////////////////////////////////////////////////////////
