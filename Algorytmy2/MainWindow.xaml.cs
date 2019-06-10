@@ -25,12 +25,14 @@ namespace Algorytmy2
 	
     public partial class MainWindow : Window
     {
-		private const double GRADUATION		= 0.6;				// skalowanie na canvasie
+		private const double GRADUATION			= 0.6;				// skalowanie na canvasie
 
-        private bool m_bDataTypeCity			= false;           // FALSE = POINTS, TRUE = MIASTA
+        private bool m_bDataTypeCity			= false;			// FALSE = POINTS, TRUE = MIASTA
+		private bool m_bFirstPath				= true;				// TRUE = Rysuj pierwszą trase , FALSE = rysuj kolejną
 		private List<City> m_lstCity			= null;             // lista wczytanych miast/punktów
 		private List<City> m_lstUnvisitedCities = null;				// lista nnieodwiedzonych Miast - potrzebne do drugiej strasy.
-		private ArrayList[] m_arrIncidentList	= null;           // lista incydencji 
+		private ArrayList[] m_arrIncidentList	= null;             // lista incydencji 
+		private Path m_PreviousPath = null;
         private int m_GetRandomPath = 0;                            // ustaw randomowa sciezke co x elementow
 		Random random = new Random();
         private int m_iMaxDistance = 7600;                      // maksymalna długość ścieżki
@@ -40,19 +42,41 @@ namespace Algorytmy2
 		private int m_iPointsCount = 0;                 // liczba punktów
 		private double[,] m_arrDistances;               // tablica odległości NxN
 
-        //public class ViewModel
-        //{
-        //    public Heurystyka m_Heurystyka { get; set; } = new Heurystyka();
-        //    public PunktStartowy m_PunktStartowy { get; set; } = new PunktStartowy();
-        //}
-
+		private const string m_sHeurystyka1 = "Metoda Greed Random + LocalSearch";
+		private const string m_sHeurystyka2 = "Metoda ILS";
+		private static int m_nHeurystyka = 0;
+		public enum Heurystyka
+		{
+			GRLS = 1,
+			ILS = 2,
+		}
         public MainWindow()
         {
             InitializeComponent();
+			DisableAllButtons();
 
-            DataContext = new Heurystyka();
+			cboxHeurystyka.Items.Add(m_sHeurystyka1);
+			cboxHeurystyka.Items.Add(m_sHeurystyka2);
         }
 
+		private void DisableAllButtons()
+		{
+			cboxHeurystyka.IsEnabled = false;
+			cboxPunktStartowy.IsEnabled = false;
+			txboxMaxDistance.IsEnabled = false;
+			btnOblicz.IsEnabled = false;
+
+		}
+		private void EnableAllButtons()
+		{
+			cboxPunktStartowy.SelectedIndex = 0;
+			cboxHeurystyka.SelectedIndex = 0;
+			cboxHeurystyka.IsEnabled = true;
+			cboxPunktStartowy.IsEnabled = true;
+			txboxMaxDistance.IsEnabled = true;
+			btnOblicz.IsEnabled = true;
+
+		}
 		///////////////////////////////////////////////////////////////////////////////
 		/// Event Otwórz plik
 		private void MenuItem_Click(object sender, RoutedEventArgs e)
@@ -67,7 +91,8 @@ namespace Algorytmy2
 			if( dlg.ShowDialog() == true)
 			{
 				LoadData(dlg.FileName);
-				// TODO? MOZE JAKIEŚ USTAWIENIA
+				EnableAllButtons();
+
 			}
 		}
 
@@ -79,7 +104,7 @@ namespace Algorytmy2
 				m_lstCity.Clear();
 			}
 			m_lstCity = new List<City>();
-			System.IO.StreamReader sr = new System.IO.StreamReader(sFileName);  
+			System.IO.StreamReader sr = new System.IO.StreamReader(sFileName);
 
 			// TODO rozbić na dwa typy danych. 
 			if( !m_bDataTypeCity )
@@ -119,6 +144,7 @@ namespace Algorytmy2
 					};
 					point.m_sName = "Numer Punktu: " + i + "\nProfit: " + point.m_dProfit +" X: " + point.X + " Y: " + point.Y; 
 					m_lstCity.Add(point);
+					cboxPunktStartowy.Items.Add(i);
 				}
 				else return;
 			}
@@ -142,7 +168,7 @@ namespace Algorytmy2
 		private void DrawPointsOnCanvas()
 		{
 			double maxProfit = m_lstCity.Max(x => x.m_dProfit);
-            canvas.Height = m_lstCity.Max(x => x.X) + 2; //TODO  Zmienić rozmiar Canvsa?
+            canvas.Height = m_lstCity.Max(x => x.X) + 2;
             canvas.Width = m_lstCity.Max(x => x.Y) + 2;
 			SolidColorBrush mySolidColorBrush = new SolidColorBrush();
 			mySolidColorBrush.Color = Color.FromArgb(255, 1, 1, 1);
@@ -151,7 +177,7 @@ namespace Algorytmy2
                 Ellipse ellipse = new Ellipse() { Width = point.m_dProfit/maxProfit + 5, Height = point.m_dProfit/maxProfit + 5, Stroke = new SolidColorBrush(Colors.Black) };
 				ellipse.ToolTip = point.m_sName;
 				ellipse.Fill = mySolidColorBrush;
-                Canvas.SetLeft(ellipse, point.X * GRADUATION); // TODO DODAĆ SKALOWANIE
+                Canvas.SetLeft(ellipse, point.X * GRADUATION);
                 Canvas.SetTop(ellipse, point.Y * GRADUATION);
                 canvas.Children.Add(ellipse);
             }
@@ -197,29 +223,81 @@ namespace Algorytmy2
 
         }
 
+		private void ShowPath(Path path, Path path2)
+        {
+            List<City> cities = path.m_lstVisitedCities;
+           
+            string displayedPath = "Trasa 1: ";
+            foreach (City city in cities)
+            {
+                displayedPath += city.m_iNumber.ToString() + ' ';
+            }
+			string displayedInfo = "Trasa 1 : Profit : " + path.m_dSumProfit + "\nDystans : " + path.m_dSumDistance;
+			if (path2 != null)
+			{
+				List<City> cities2 = path2.m_lstVisitedCities;
+				displayedPath += "\nTrasa 2: ";
+				foreach (City city in cities2)
+				{
+					displayedPath += city.m_iNumber.ToString() + ' ';
+				}
+				displayedInfo += "\nTrasa2 : Profit : " + path2.m_dSumProfit + "\nDystans : " + path2.m_dSumDistance;
+			}
+			displayedCitiesText.Text = displayedPath;
+			displayedOtherText.Text = displayedInfo;
+            displayedOtherText.Visibility = Visibility.Visible;
+            displayedCitiesText.Visibility = Visibility.Visible;
+        }
+
 		private void Oblicz_Click(object sender, RoutedEventArgs e)
 		{
-            //string ComboHeurystyka = (string)heurystyka.SelectedItem.ToString();
-            //string ComboPunktStartowy = (string)punktStartowy.Text;
+			if( !m_bDataTypeCity )
+			{
+				m_iMaxDistance = Int32.Parse(txboxMaxDistance.Text);
+				m_iStartCity = Int32.Parse(cboxPunktStartowy.SelectedItem.ToString());
+				Path path = null;
+				if(m_nHeurystyka == (int) Heurystyka.GRLS)
+				{
+					path = GreedyRandomLocalSearch();
+				}
+				else
+				{
+					//TODO DRUGA METODA 
+				}
+				if (m_bFirstPath)
+				{
+					m_PreviousPath = path;
+					ShowPath(path, null);
+					DrawLines(path.m_lstVisitedCities, Brushes.Blue);
+					m_bFirstPath = false;
+				}
+				else
+				{
+					DrawLines(path.m_lstVisitedCities, Brushes.Red);
+					ShowPath(m_PreviousPath, path);
+				}
 
-           // string w_distance = textBox.Text; // dystans pobrany z okna
-            m_iMaxDistance = Int32.Parse(textBox.Text);
-            Path newPath = MetodaGreedy();
-             Path modifiedPath = LocalSearch(newPath);
-            Path modifiedPath2  = GreedyLocalSearch2(10000);
-			if (modifiedPath2.m_dSumProfit > modifiedPath.m_dSumProfit) 
-				DrawLines(modifiedPath2.m_lstVisitedCities, Brushes.Blue);
-			else	
-				DrawLines(modifiedPath.m_lstVisitedCities, Brushes.Blue);
-            //Console.WriteLine(ComboHeurystyka);
-            //Console.WriteLine(ComboPunktStartowy);
-            //Console.WriteLine(w_distance);
+			}
+			else
+			{
 
+			}
 
         }
 
+		private Path GreedyRandomLocalSearch()
+		{
+			//Path modifiedPath = LocalSearch(MetodaGreedy());
+			int iValue = Int32.Parse(txboxHeurystykaAddon.Text);
+			if (iValue > 15000) iValue = 15000;
+			Path modifiedPath2 = GreedyRandomLocalSearch2(iValue);
+			m_lstUnvisitedCities = modifiedPath2.m_lstUnvisitedCities;
+			m_lstUnvisitedCities.Insert(m_iStartCity, m_lstCity.ElementAt(m_iStartCity));
+			m_lstCity = m_lstUnvisitedCities;
+			return modifiedPath2;
+		}
 
-        private Path GreedyLocalSearch2(int numberOfRouts)
+		private Path GreedyRandomLocalSearch2(int numberOfRouts)
         {
 			int i = 0;
             List<Path> lstRouts = new List<Path>();
@@ -271,23 +349,21 @@ namespace Algorytmy2
             while (distance < m_iMaxDistance)
             {
                 City bestCity = GetBestCity(currentCity, lstUnvisdCit); // Znajdz najlepsze miasto profit/distance
-                if (CheckDistance(distance, iDistMax, currentCity, bestCity, startCity)) // sprawdz czy mozną wrócić do miasta początkowego
-                {
-                        distance = distance + m_arrDistances[currentCity.m_iNumber, bestCity.m_iNumber];
-                        profit = profit + bestCity.m_dProfit;
-                        path.Add(bestCity);
-                        lstUnvisdCit.Remove(bestCity);
-                        currentCity = bestCity;
-                }
-                else
+				if (CheckDistance(distance, iDistMax, currentCity, bestCity, startCity)) // sprawdz czy mozną wrócić do miasta początkowego
+				{
+					distance = distance + m_arrDistances[currentCity.m_iNumber, bestCity.m_iNumber];
+					profit = profit + bestCity.m_dProfit;
+					path.Add(bestCity);
+					lstUnvisdCit.Remove(bestCity);
+					currentCity = bestCity;
+				}
+				else
                 {
                     break;
                 }
             }
             path.Add(path.ElementAt(0));
             distance = distance + m_arrDistances[path.ElementAt(path.Count() - 2).m_iNumber, path.ElementAt(path.Count() - 1).m_iNumber];
-			m_lstUnvisitedCities = lstUnvisdCit;
-
             return new Path(path, distance, profit, lstUnvisdCit);
 		}
 
@@ -321,8 +397,6 @@ namespace Algorytmy2
             }
             path.Add(path.ElementAt(0));
             distance = distance + m_arrDistances[path.ElementAt(path.Count() - 2).m_iNumber, path.ElementAt(path.Count() - 1).m_iNumber];
-            m_lstUnvisitedCities = lstUnvisdCit;
-
             return new Path(path, distance, profit, lstUnvisdCit);
         }
 
@@ -552,10 +626,7 @@ namespace Algorytmy2
         {
             int n = path.m_lstVisitedCities.Count;
             List<City> tempPath = new List<City>();
-           
             List<City> unvisited = new List<City>(path.m_lstUnvisitedCities);
-			//List<City> notMatch = new List<City>();
-
             List<City> bestPath = new List<City>(path.m_lstVisitedCities);
             double bestProfit   = path.m_dSumProfit;
             double bestDistance = path.m_dSumDistance;
@@ -598,49 +669,7 @@ namespace Algorytmy2
             }
             return new Path(bestPath, bestDistance, bestProfit, unvisited);
         }
-		//private Path Insert(Path path, double max)
-  //      {
-  //          int n = path.m_lstVisitedCities.Count;
-  //          List<City> tempPath = new List<City>();
-           
-  //          List<City> unvisited = new List<City>(path.m_lstUnvisitedCities);
 
-  //          List<City> bestPath = new List<City>(path.m_lstVisitedCities);
-  //          double bestProfit   = path.m_dSumProfit;
-  //          double bestDistance = path.m_dSumDistance;
-  //          double newDistance  = 0;
-  //          bool improve = true;
-  //          while (improve)
-  //          {
-  //              improve = false;
-  //              for (int v = 0; v < unvisited.Count-1; v++)
-  //              {
-		//			if(unvisited.ElementAt(v).m_dProfit == 0) { 
-		//				continue;
-		//			}
-					
-  //                  for (int i = 1; i < n - 1; i++)
-  //                  {
-  //                      //City bestCity = GetBestCity(bestPath.ElementAt(i), unvisited);
-		//				if(v > (unvisited.Count - 1) ) {
-		//					improve = false;
-		//					break;
-		//				}
-  //                      newDistance = optCheckInsertNeeded(bestPath, bestDistance, unvisited.ElementAt(v).m_iNumber, i); 
-  //                      if(newDistance <= max)
-  //                      {
-  //                          tempPath = ConstructNewPath(i, unvisited.ElementAt(v), bestPath);
-  //                          bestProfit = bestProfit + unvisited.ElementAt(v).m_dProfit;
-  //                          bestDistance = newDistance;
-  //                          bestPath = tempPath;      
-  //                          improve = true;
-  //                          unvisited.RemoveAt(v);
-  //                      }
-  //                  }
-  //              }      
-  //          }
-  //          return new Path(bestPath, bestDistance, bestProfit, unvisited);
-  //      }
 		private List<City> ConstructNewPath(int insertIdx, City insertNode, List<City> currentPath)
         {
             List<City> newPath = new List<City>();
@@ -659,35 +688,22 @@ namespace Algorytmy2
             return newPath;
         }
 
-        public class Heurystyka
-        {
-            public Heurystyka()
-            {
-                Heurystyki = new List<string>();
-                Heurystyki.Add("pierwsza");
-                Heurystyki.Add("druga");
-                Heurystyki.Add("trzecia");
+		private void heurystyka_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		{
+			string text = (sender as ComboBox).SelectedItem as string;
+			if (text.CompareTo(m_sHeurystyka1) == 0)
+			{
+				labHeurystykaAddon.Visibility = Visibility.Visible;
+				txboxHeurystykaAddon.Visibility = Visibility.Visible;
+				m_nHeurystyka = (int) Heurystyka.GRLS;
+			}
+			else
+			{
+				labHeurystykaAddon.Visibility = Visibility.Hidden;
+				txboxHeurystykaAddon.Visibility = Visibility.Hidden;
+				m_nHeurystyka = (int) Heurystyka.ILS;;
+			}
+		}
 
-            }
-            public IList<string> Heurystyki { get; set; }
-
-        }
-
-        public class PunktStartowy
-        {
-            public PunktStartowy()
-            {
-                Startowy = new List<string>();
-                Startowy.Add("jedssen");
-                Startowy.Add("dssa");
-            }
-            public IList<string> Startowy { get; set; }
-        }
-
-        private void heurystyka_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
-        }
-
-    }
+	}
 }
