@@ -236,7 +236,7 @@ namespace Algorytmy2
 			if (path2 != null)
 			{
 				List<City> cities2 = path2.m_lstVisitedCities;
-				displayedPath += "Trasa 2: ";
+				displayedPath += "\nTrasa 2: ";
 				foreach (City city in cities2)
 				{
 					displayedPath += city.m_iNumber.ToString() + ' ';
@@ -292,7 +292,7 @@ namespace Algorytmy2
 			if (iValue > 15000) iValue = 15000;
 			Path modifiedPath2 = GreedyRandomLocalSearch2(iValue);
 			m_lstUnvisitedCities = modifiedPath2.m_lstUnvisitedCities;
-			m_lstUnvisitedCities.Add(m_lstCity.ElementAt(m_iStartCity));
+			m_lstUnvisitedCities.Insert(m_iStartCity, m_lstCity.ElementAt(m_iStartCity));
 			m_lstCity = m_lstUnvisitedCities;
 			return modifiedPath2;
 		}
