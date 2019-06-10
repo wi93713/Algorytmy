@@ -247,7 +247,26 @@ namespace Algorytmy2
 			displayedOtherText.Text = displayedInfo;
             displayedOtherText.Visibility = Visibility.Visible;
             displayedCitiesText.Visibility = Visibility.Visible;
+			if (path2 != null)
+				CheckTwoPatch(path.m_lstVisitedCities, path2.m_lstVisitedCities);
         }
+
+		private bool CheckTwoPatch(List<City> m_lstVisitedCities1, List<City> m_lstVisitedCities2)
+		{
+			foreach (City city in m_lstVisitedCities1)
+			{
+				if (city.m_iNumber == m_iStartCity)
+					continue;
+				foreach (City city2 in m_lstVisitedCities2)
+				{
+					if (city2.m_iNumber == m_iStartCity)
+						continue;
+					if (city.m_iNumber == city2.m_iNumber)
+						return true;
+				}
+			}
+			return false;
+		}
 
 		private void Oblicz_Click(object sender, RoutedEventArgs e)
 		{
