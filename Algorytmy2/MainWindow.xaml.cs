@@ -206,7 +206,7 @@ namespace Algorytmy2
             m_iMaxDistance = Int32.Parse(textBox.Text);
             Path newPath = MetodaGreedy();
              Path modifiedPath = LocalSearch(newPath);
-            Path modifiedPath2  = GreedyLocalSearch2(500);
+            Path modifiedPath2  = GreedyLocalSearch2(10000);
 			if (modifiedPath2.m_dSumProfit > modifiedPath.m_dSumProfit) 
 				DrawLines(modifiedPath2.m_lstVisitedCities, Brushes.Blue);
 			else	
@@ -221,22 +221,34 @@ namespace Algorytmy2
 
         private Path GreedyLocalSearch2(int numberOfRouts)
         {
-            // conctruct N routes then find best one and take localsearch on it
-            List<Path> routs = new List<Path>();
-            for (int i = 0; i < numberOfRouts; i++)
+			int i = 0;
+            List<Path> lstRouts = new List<Path>();
+            for (i = 0; i < numberOfRouts; i++)
             {
-                routs.Add(MetodaGreedyRand());
+                lstRouts.Add(MetodaGreedyRand());
             }
-            Path best = routs.ElementAt(0);
+			lstRouts = lstRouts.OrderByDescending(x => x.m_dSumProfit).ToList();
+            Path best = lstRouts.ElementAt(0);
+			Path newPath = null;
+			i = 0;
+            foreach(Path p in lstRouts)
+            {
+				if (i < 50) {
+					newPath = LocalSearch(p);
+				}
+				//else
+				//if (i < 50) {
+				//	newPath = LocalSearch(lstRouts.ElementAt(random.Next(40, lstRouts.Count - 1)));
+				//}
+				else {
+					break;
+				}
 
-            foreach (Path r in routs)
-            {
-                if (r.m_dSumProfit > best.m_dSumProfit)
-                {
-                    best = r;
-                }
+				if (newPath.m_dSumProfit > best.m_dSumProfit) {
+					best = newPath;
+				}
+				i++;
             }
-            best = LocalSearch(best);
             return best;
         }
 
@@ -286,7 +298,7 @@ namespace Algorytmy2
             double distance = 0;
             double profit = 0;
             int iDistMax = m_iMaxDistance;
-            List<City> path = new List<City>();					// route
+            List<City> path = new List<City>();						// route
             List<City> lstUnvisdCit = new List<City>(m_lstCity);	// nieodwiedzone miasta
             City currentCity = m_lstCity.ElementAt(m_iStartCity);
             path.Add(currentCity);   //add start point to route
@@ -374,6 +386,7 @@ namespace Algorytmy2
             double bestDist = double.MaxValue;
 			City bestCity = null;
 			List<City> lstRandom = new List<City>();
+			List<int> lstNumbers = new List<int>();
             foreach (var n in unvisitedCities)
             {
 				if (current != n)

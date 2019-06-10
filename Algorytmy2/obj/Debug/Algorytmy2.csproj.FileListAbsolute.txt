@@ -42,3 +42,6 @@ C:\Users\Kamil\source\repos\Algorytmy2\Algorytmy\Algorytmy2\obj\Debug\Algorytmy2
 C:\Users\Kamil\source\repos\Algorytmy2\Algorytmy\Algorytmy2\obj\Debug\Algorytmy2.csproj.CoreCompileInputs.cache
 C:\Users\Kamil\source\repos\Algorytmy2\Algorytmy\Algorytmy2\obj\Debug\Algorytmy2.exe
 C:\Users\Kamil\source\repos\Algorytmy2\Algorytmy\Algorytmy2\obj\Debug\Algorytmy2.pdb
+C:\Users\Kamil\source\repos\Algorytmy2\Algorytmy\Algorytmy2\bin\Debug\Microsoft.Maps.MapControl.WPF.dll
+C:\Users\Kamil\source\repos\Algorytmy2\Algorytmy\Algorytmy2\bin\Debug\Microsoft.Maps.MapControl.WPF.xml
+C:\Users\Kamil\source\repos\Algorytmy2\Algorytmy\Algorytmy2\obj\Debug\Algorytmy2.csproj.CopyComplete
