@@ -40,6 +40,7 @@ namespace Algorytmy2
 
         //********* Deklaracje zmiennych dla danych z mapy Polski*********************
         private int m_iCitiesCount = 0;
+        private double[,] m_iCitiesDistance;
 
         //********* Deklaracje zmiennych tylko dla danych punktówych******************
         private int m_iPointsCount = 0;                 // liczba punktów
@@ -124,11 +125,8 @@ namespace Algorytmy2
             {
                 // todo
                 LoadCities(sr);
-                foreach (City city in m_lstCity)
-                {
-                    Console.Write(city.m_sName);
-                }
-                
+                CalcDistances();
+                m_arrIncidentList = DijkstraAlgotytm.setIncidenceList(m_iCitiesCount, m_iCitiesDistance, m_lstCity);
             }
         }
 
@@ -166,6 +164,7 @@ namespace Algorytmy2
         /// Obliczenie wszystkich par odległości 
         private void CalcDistances()
         {
+            m_iCitiesDistance = new double[m_iCitiesCount, m_iCitiesCount];
             m_arrDistances = new double[m_iPointsCount, m_iPointsCount];
             for (int i = 0; i < m_iPointsCount; i++)
             {
@@ -174,6 +173,7 @@ namespace Algorytmy2
                     double x = m_lstCity[i].X - m_lstCity[j].X;
                     double y = m_lstCity[i].Y - m_lstCity[j].Y;
                     m_arrDistances[i, j] = Convert.ToDouble(Math.Floor(Math.Sqrt(x * x + y * y)));
+                    m_iCitiesDistance[i, j] = Convert.ToDouble(Math.Floor(Math.Sqrt(x * x + y * y)));
                 }
             }
         }
