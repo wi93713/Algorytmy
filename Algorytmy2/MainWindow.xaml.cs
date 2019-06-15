@@ -123,7 +123,7 @@ namespace Algorytmy2
                 LoadPoints(sr);
                 CalcDistances();
                 DrawPointsOnCanvas();
-                temp_lstCity = m_lstCity;
+                temp_lstCity = new List<City>(m_lstCity);
             }
             else
             {
@@ -131,7 +131,7 @@ namespace Algorytmy2
                 LoadCities(sr);
                 CalcDistances();
                 m_arrIncidentList = DijkstraAlgotytm.setIncidenceList(m_iCitiesCount, m_iCitiesDistance, m_lstCity);
-                temp_lstCity = m_lstCity;
+                temp_lstCity = new List<City>(m_lstCity);
             }
         }
 
@@ -150,7 +150,7 @@ namespace Algorytmy2
         }
         ///////////////////////////////////////////////////////////////////////////////
         /// Wczytanie punktów
-        private void LoadPoints(System.IO.StreamReader sr)
+        private void LoadPoints(StreamReader sr)
         {
             sr.DiscardBufferedData(); // przejdz do początku pliku
             m_iPointsCount = Convert.ToInt32(sr.ReadLine());
@@ -212,8 +212,6 @@ namespace Algorytmy2
 		private void DrawPointsOnCanvas()
 		{
 			double maxProfit = m_lstCity.Max(x => x.m_dProfit);
-			//m_tmpCanvas.Height =  m_lstCity.Max(x => x.X) + 2;
-			//m_tmpCanvas.Width = m_lstCity.Max(x => x.Y) + 2;
 			canvas.Height = m_lstCity.Max(x => x.X) + 2;
 			canvas.Width = m_lstCity.Max(x => x.Y) + 2;
 			SolidColorBrush mySolidColorBrush = new SolidColorBrush();
@@ -226,7 +224,6 @@ namespace Algorytmy2
 				Canvas.SetLeft(ellipse, point.X * GRADUATION);
 				Canvas.SetTop(ellipse, point.Y * GRADUATION);
 				canvas.Children.Add(ellipse);
-				//m_tmpCanvas.Children.Add(ellipse);
 			}
 		}
 		#endregion
@@ -244,7 +241,6 @@ namespace Algorytmy2
                     double x = m_lstCity[i].X - m_lstCity[j].X;
                     double y = m_lstCity[i].Y - m_lstCity[j].Y;
                     m_arrDistances[i, j] = Convert.ToDouble(Math.Floor(Math.Sqrt(x * x + y * y)));
-                    //m_iCitiesDistance[i, j] = Convert.ToDouble(Math.Floor(Math.Sqrt(x * x + y * y)));
                 }
             }
         }
@@ -423,49 +419,20 @@ namespace Algorytmy2
 
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
-            canvas.Children.Clear();
-            Path path = null;
-            txboxMaxDistance.Text = String.Empty;
-            displayedOtherText.Text = String.Empty;
-            displayedCitiesText.Text = String.Empty;
-            m_lstCity = temp_lstCity;
-            CalcDistances();
-            if (m_nHeurystyka == (int)Heurystyka.GRLS)
-            {
-                path = GreedyRandomLocalSearch();
-            }
-            else
-            {
-                path = IteratedLocaSearchMethod();
-            }
+            canvas.Children.Clear();     
+            displayedOtherText.Text = "";
+            displayedCitiesText.Text = "";
+            m_lstCity =  new List<City>(temp_lstCity);    
             m_bFirstPath = true;
             DrawPointsOnCanvas();
-            if (m_bFirstPath)
-            {
-                m_PreviousPath = path;
-                ShowPath(path, null);
-            }
-            else
-            {
-                ShowPath(m_PreviousPath, path);
-            }
-            //displayedCities.Visibility = Visibility.Visible;
-            //displayedCitiesText.Visibility = Visibility.Visible;
-            //foreach(UIElement child in canvas.Children)
-            //{
-            //    var xaml = System.Windows.Markup.XamlWriter.Save(child);
-            //    var deepCopy = System.Windows.Markup.XamlReader.Parse(xaml) as UIElement;
-            //    canvas.Children.Add(deepCopy);
-            //}
-
-
+          
         }
 
         private Path GreedyRandomLocalSearch()
         {
             Path modifiedPath = LocalSearch(MetodaGreedy());
             int iValue = Int32.Parse(txboxHeurystykaAddon.Text);
-            if (iValue > 10000) iValue = 10000;
+            if (iValue > 15000) iValue = 15000;
 
             Path modifiedPath2 = GreedyRandomLocalSearch2(iValue);
             m_lstUnvisitedCities = modifiedPath2.m_lstUnvisitedCities;
@@ -475,7 +442,7 @@ namespace Algorytmy2
         }
 		private Path IteratedLocaSearchMethod()
         {
-			int n = 2;
+			int n = 1;
             if (n > 500) n = 500;
 			int m = 250;
             Path modifiedPath2 = IteratedLocaSearch(n, m);
@@ -493,8 +460,7 @@ namespace Algorytmy2
 			{
 				m_Strength = 1;
 				int noProgres1 = 0, noProgres2 = 0;
-				Path t = MetodaGreedyRand();
-				//t.m_lstUnvisitedCities = t.m_lstUnvisitedCities.OrderByDescending(x => x.m_dProfit).ToList();
+				Path t = MetodaGreedy();
 				Path tlok = t;
 				for(int i = 0; i<= m; i++)
 				{
@@ -551,6 +517,7 @@ namespace Algorytmy2
 		{
 			for (int i = 0; i < (m_Strength > 2 ? 2 : 1); i++)
 			{
+				
 				double min = t.m_lstVisitedCities.Min(x => x.m_dProfit);
 				City tmpCity = t.m_lstVisitedCities.First(x => x.m_dProfit == min);
 				if (tmpCity.m_iNumber == m_iStartCity)

@@ -49,10 +49,10 @@
                 <Label x:Name="labHeurystykaAddon" Content="Liczba scieżek" Grid.Column="2" HorizontalAlignment="Left" Grid.Row="2" VerticalAlignment="Top" Height="26" Width="98" Visibility="Hidden"/>
                 <TextBox x:Name="txboxHeurystykaAddon" Grid.Column="3" HorizontalAlignment="Left" Height="26" Grid.Row="2" TextWrapping="Wrap" Text="1000" VerticalAlignment="Top" TextAlignment="Center" FontSize="14" Width="73" Visibility="Hidden"/>
                 <Button x:Name="btnReset" Grid.Column="5" HorizontalAlignment="Left" Margin="21.5,1,0,0" Grid.Row="2"  Content="Reset" VerticalAlignment="Top" Width="86" Height="25"  Click="Reset_Click"/>
-                <Label x:Name="displayedOther" Grid.Column="5" HorizontalAlignment="Left" Height="126" Margin="21,28,0,0" Grid.Row="3" VerticalAlignment="Top" Width="562">
+                <Label x:Name="displayedOther" Grid.Column="5" HorizontalAlignment="Left" Height="126" Margin="20,28,0,0" Grid.Row="3" VerticalAlignment="Top" Width="560">
                     <TextBox x:Name="displayedOtherText" Height="103" TextWrapping="Wrap" Text="" Width="517" Visibility="Hidden"/>
                 </Label>
-                <Label x:Name="displayedCities" Grid.Column="5" HorizontalAlignment="Left" Height="190" Margin="16,172,0,0" Grid.Row="3" VerticalAlignment="Top" Width="567">
+                <Label x:Name="displayedCities" Grid.Column="5" HorizontalAlignment="Left" Height="190" Margin="20,172,0,0" Grid.Row="3" VerticalAlignment="Top" Width="560">
                     <TextBox x:Name="displayedCitiesText" Height="179" TextWrapping="Wrap" Text="" Width="557" Visibility="Hidden"/>
                 </Label>
 
