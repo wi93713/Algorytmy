@@ -41,12 +41,11 @@ namespace Algorytmy2
 		private int m_Strength = 1;
 		private Canvas m_tmpCanvas;
         //********* Deklaracje zmiennych dla danych z mapy Polski*********************
-        private int m_iCitiesCount = 0;
-        private double[,] m_iCitiesDistance;
 
         //********* Deklaracje zmiennych tylko dla danych punktówych******************
         private int m_iPointsCount = 0;                 // liczba punktów
         private double[,] m_arrDistances;               // tablica odległości NxN
+		private int m_iPath = 0;						// liczba galezi 
 
         private const string m_sHeurystyka1 = "Metoda Greed Random + LocalSearch";
         private const string m_sHeurystyka2 = "Metoda ILS";
@@ -96,7 +95,7 @@ namespace Algorytmy2
             dlg.FilterIndex = 2;
             dlg.RestoreDirectory = true;
             if (dlg.ShowDialog() == true)
-            {
+            {	
                 LoadData(dlg.FileName);
                 EnableAllButtons();
 
@@ -130,8 +129,8 @@ namespace Algorytmy2
                 // todo
                 bingMap.Visibility = Visibility.Visible;
                 LoadCities(sr);
-                CalcDistances();
-                m_arrIncidentList = DijkstraAlgorytm.setIncidenceList(m_iCitiesCount, m_iCitiesDistance, m_lstCity);
+                //CalcDistancesCities();
+                m_arrIncidentList = DijkstraAlgorytm.setIncidenceList(m_iPointsCount, m_arrDistances, m_lstCity);
                 DrawPinsOnBingMap();
                 temp_lstCity = new List<City>(m_lstCity);
             }
@@ -184,9 +183,9 @@ namespace Algorytmy2
         private void LoadCities(StreamReader sr)
         {
             sr.DiscardBufferedData(); // przejdz do początku pliku
-            m_iCitiesCount = Convert.ToInt32(sr.ReadLine());
+            m_iPointsCount = Convert.ToInt32(sr.ReadLine());
             string line = null;
-            for (int i = 0; i < m_iCitiesCount; i++)
+            for (int i = 0; i < m_iPointsCount; i++)
             {
                 line = sr.ReadLine();
                 if (line != null)
@@ -205,9 +204,28 @@ namespace Algorytmy2
                     m_lstCity.Add(city);
                     cboxPunktStartowy.Items.Add(i);
                 }
-                else return;
+                else break;
+			
             }
-        }
+			 m_arrDistances = new double[m_iPointsCount, m_iPointsCount];
+			m_iPath = Convert.ToInt32(sr.ReadLine());
+			for (int i = 0; i < m_iPath-1; i++)
+			{
+				line = sr.ReadLine();
+				if (line != null)
+				{
+					var arrLine = line.Split(' ');
+					int A = Convert.ToInt32(arrLine[0]);
+					int B = Convert.ToInt32(arrLine[1]);
+					int distance = Convert.ToInt32(arrLine[2]);
+					m_arrDistances[A - 1, B - 1] = distance;
+					m_arrDistances[B - 1, A - 1] = distance;
+				}
+				else
+					break;
+			}
+
+		}
 
 		///////////////////////////////////////////////////////////////////////////////
 		///Dodanie punktów na canvasie
@@ -234,14 +252,14 @@ namespace Algorytmy2
         private void DrawPolygonOnBingMap(List<City> route, Color color)
         {
             MapPolyline polygon = new MapPolyline();
-            polygon.Fill = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Transparent);
-            polygon.Stroke = new System.Windows.Media.SolidColorBrush(color);
+            polygon.Fill = new SolidColorBrush(Colors.Transparent);
+            polygon.Stroke = new SolidColorBrush(color);
             polygon.StrokeThickness = 5;
             polygon.Opacity = 0.7;
             LocationCollection path = new LocationCollection();
             for (int i = 0; i < route.Count - 2; i++)
             {
-                if (m_iCitiesDistance[route.ElementAt(i).m_iNumber, route.ElementAt(i + 1).m_iNumber] == 0)
+                if (m_arrDistances[route.ElementAt(i).m_iNumber, route.ElementAt(i + 1).m_iNumber] == 0)
                 {
                     DijkstraAlgorytm di = new DijkstraAlgorytm(m_arrIncidentList);
                     int[] pathSD = di.GetPath(route.ElementAt(i).m_iNumber, route.ElementAt(i + 1).m_iNumber);
@@ -284,12 +302,12 @@ namespace Algorytmy2
 
         private void DrawPinsOnBingMap()
         {
-            foreach (var node in m_lstCity)
+            foreach (var city in m_lstCity)
             {
                 // The pushpin to add to the map.
                 Pushpin pin = new Pushpin();
-                pin.Location = new Location(node.X, node.Y);
-                pin.ToolTip = "Pozycja: " + node.m_iNumber + "\nProfit: " + node.m_iNumber + "\nX: " + node.X + "\nY: " + node.Y;
+                pin.Location = new Location(city.X, city.Y);
+                pin.ToolTip = city.m_sName + "\nPozycja: " + city.m_iNumber + "\nProfit: " + city.m_iNumber + "\nX: " + city.X + "\nY: " + city.Y;
                 // Adds the pushpin to the map.
                 bingMap.Children.Add(pin);
             }
@@ -300,7 +318,6 @@ namespace Algorytmy2
         /// Obliczenie wszystkich par odległości 
         private void CalcDistances()
         {
-            m_iCitiesDistance = new double[m_iCitiesCount, m_iCitiesCount];
             m_arrDistances = new double[m_iPointsCount, m_iPointsCount];
             for (int i = 0; i < m_iPointsCount; i++)
             {
@@ -308,11 +325,43 @@ namespace Algorytmy2
                 {
                     double x = m_lstCity[i].X - m_lstCity[j].X;
                     double y = m_lstCity[i].Y - m_lstCity[j].Y;
-                    m_arrDistances[i, j] = Convert.ToDouble(Math.Floor(Math.Sqrt(x * x + y * y)));
+					double m = Math.Floor(Math.Sqrt(x * x + y * y));
+					m_arrDistances[i, j] = m;
+                }
+            }
+        }
+		///////////////////////////////////////////////////////////////////////////////
+        /// Obliczenie wszystkich par odległości 
+        private void CalcDistancesCities()
+        {
+            m_arrDistances = new double[m_iPointsCount, m_iPointsCount];
+            for (int i = 0; i < m_iPointsCount; i++)
+            {
+                for (int j = 0; j < m_iPointsCount; j++)
+                {
+					m_arrDistances[i, j] = Math.Floor(HaversineInKM(m_lstCity[i].X, m_lstCity[i].Y, m_lstCity[j].X, m_lstCity[j].Y));
                 }
             }
         }
 
+		double _eQuatorialEarthRadius = 6378.1370D;
+		double _d2r = (Math.PI / 180D);
+
+		private int HaversineInM(double lat1, double long1, double lat2, double long2)
+		{
+			return (int)(1000D * HaversineInKM(lat1, long1, lat2, long2));
+		}
+
+		private double HaversineInKM(double lat1, double long1, double lat2, double long2)
+		{
+			double dlong = (long2 - long1) * _d2r;
+			double dlat = (lat2 - lat1) * _d2r;
+			double a = Math.Pow(Math.Sin(dlat / 2D), 2D) + Math.Cos(lat1 * _d2r) * Math.Cos(lat2 * _d2r) * Math.Pow(Math.Sin(dlong / 2D), 2D);
+			double c = 2D * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1D - a));
+			double d = _eQuatorialEarthRadius * c;
+
+			return d;
+		}
 		///////////////////////////////////////////////////////////////////////////////
 		/// Rysowanie Trasy
 		private void DrawLines(List<City> path, SolidColorBrush color)
