@@ -451,11 +451,11 @@ namespace Algorytmy2
 
         private void Oblicz_Click(object sender, RoutedEventArgs e)
         {
+            m_iMaxDistance = Int32.Parse(txboxMaxDistance.Text);
+            m_iStartCity = Int32.Parse(cboxPunktStartowy.SelectedItem.ToString());
+            Path path = null;
             if (!m_bDataTypeCity)
             {
-                m_iMaxDistance = Int32.Parse(txboxMaxDistance.Text);
-                m_iStartCity = Int32.Parse(cboxPunktStartowy.SelectedItem.ToString());
-                Path path = null;
                 if (m_nHeurystyka == (int)Heurystyka.GRLS)
                 {
                     path = GreedyRandomLocalSearch();
@@ -480,9 +480,6 @@ namespace Algorytmy2
             }
             else
             {
-                m_iMaxDistance = Int32.Parse(txboxMaxDistance.Text);
-                m_iStartCity = Int32.Parse(cboxPunktStartowy.SelectedItem.ToString());
-                Path path = null;
                 if (m_nHeurystyka == (int)Heurystyka.GRLS)
                 {
                     path = GreedyRandomLocalSearch();
@@ -518,7 +515,61 @@ namespace Algorytmy2
           
         }
 
-        private Path GreedyRandomLocalSearch()
+        private void Trasa_Click(object sender, RoutedEventArgs e)
+        {
+            int SRC = 0;
+            int DST = 0;
+            DijsktryWindow dq = new DijsktryWindow(m_lstCity);
+            dq.ShowDialog();
+            if (dq.DialogResult == true)
+            {
+                SRC = dq.FROM;
+                DST = dq.TO;
+
+                DijkstraAlgorytm di = new DijkstraAlgorytm(m_arrIncidentList);
+                List<City> dijkstryPath = new List<City>();
+                int[] path = di.GetPath(SRC, DST);
+                if (path != null)
+                {
+                    //convert from int[] to List<Node>
+                    foreach (var p in path)
+                    {
+                        foreach (var n in m_lstCity)
+                        {
+                            if (n.m_iNumber == p)
+                            {
+                                dijkstryPath.Add(n);
+                                break;
+                            }
+                        }
+                    }
+                    DrawRouteOnBingMap(dijkstryPath, Colors.Red);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Niespójność danych, trasa nie istnieje", "Błąd danych wejściowych", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+
+    private void DrawRouteOnBingMap(List<City> route, Color color)
+    {
+        MapPolyline polygon = new MapPolyline();
+        polygon.Fill = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Transparent);
+        polygon.Stroke = new System.Windows.Media.SolidColorBrush(color);
+        polygon.StrokeThickness = 5;
+        polygon.Opacity = 0.7;
+        LocationCollection path = new LocationCollection();
+        foreach (var node in route)
+        {
+            path.Add(new Location(node.X, node.Y));
+        }
+
+        polygon.Locations = path;
+        bingMap.Children.Add(polygon);
+    }
+
+    private Path GreedyRandomLocalSearch()
         {
             Path modifiedPath = LocalSearch(MetodaGreedy());
             int iValue = Int32.Parse(txboxHeurystykaAddon.Text);
