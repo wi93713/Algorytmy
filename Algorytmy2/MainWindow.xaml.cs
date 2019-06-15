@@ -16,7 +16,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using MoreLinq;
 
 namespace Algorytmy2
 {
@@ -31,6 +30,7 @@ namespace Algorytmy2
         private bool m_bDataTypeCity = true;           // FALSE = POINTS, TRUE = MIASTA
         private bool m_bFirstPath = true;               // TRUE = Rysuj pierwszą trase , FALSE = rysuj kolejną
         private List<City> m_lstCity = null;             // lista wczytanych miast/punktów
+        private List<City> temp_lstCity = null;
         private List<City> m_lstUnvisitedCities = null;             // lista nnieodwiedzonych Miast - potrzebne do drugiej strasy.
         private ArrayList[] m_arrIncidentList = null;             // lista incydencji 
         private Path m_PreviousPath = null;
@@ -123,6 +123,7 @@ namespace Algorytmy2
                 LoadPoints(sr);
                 CalcDistances();
                 DrawPointsOnCanvas();
+                temp_lstCity = m_lstCity;
             }
             else
             {
@@ -130,6 +131,7 @@ namespace Algorytmy2
                 LoadCities(sr);
                 CalcDistances();
                 m_arrIncidentList = DijkstraAlgotytm.setIncidenceList(m_iCitiesCount, m_iCitiesDistance, m_lstCity);
+                temp_lstCity = m_lstCity;
             }
         }
 
@@ -416,6 +418,46 @@ namespace Algorytmy2
             {
 
             }
+
+        }
+
+        private void Reset_Click(object sender, RoutedEventArgs e)
+        {
+            canvas.Children.Clear();
+            Path path = null;
+            txboxMaxDistance.Text = String.Empty;
+            displayedOtherText.Text = String.Empty;
+            displayedCitiesText.Text = String.Empty;
+            m_lstCity = temp_lstCity;
+            CalcDistances();
+            if (m_nHeurystyka == (int)Heurystyka.GRLS)
+            {
+                path = GreedyRandomLocalSearch();
+            }
+            else
+            {
+                path = IteratedLocaSearchMethod();
+            }
+            m_bFirstPath = true;
+            DrawPointsOnCanvas();
+            if (m_bFirstPath)
+            {
+                m_PreviousPath = path;
+                ShowPath(path, null);
+            }
+            else
+            {
+                ShowPath(m_PreviousPath, path);
+            }
+            //displayedCities.Visibility = Visibility.Visible;
+            //displayedCitiesText.Visibility = Visibility.Visible;
+            //foreach(UIElement child in canvas.Children)
+            //{
+            //    var xaml = System.Windows.Markup.XamlWriter.Save(child);
+            //    var deepCopy = System.Windows.Markup.XamlReader.Parse(xaml) as UIElement;
+            //    canvas.Children.Add(deepCopy);
+            //}
+
 
         }
 

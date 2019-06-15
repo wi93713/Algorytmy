@@ -15,7 +15,8 @@
                     <ColumnDefinition Width="166*"/>
                     <ColumnDefinition Width="98*"/>
                     <ColumnDefinition Width="178*"/>
-                    <ColumnDefinition Width="735*"/>
+                    <ColumnDefinition Width="128*"/>
+                    <ColumnDefinition Width="608*"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="20"/>
@@ -23,7 +24,7 @@
                     <RowDefinition Height="29*"/>
                     <RowDefinition Height="695*"/>
                 </Grid.RowDefinitions>
-                <DockPanel Grid.RowSpan="1" Grid.ColumnSpan="5">
+                <DockPanel Grid.RowSpan="1" Grid.ColumnSpan="6">
                     <Menu DockPanel.Dock="Top">
                         <MenuItem Header="Plik">
                             <MenuItem Header="Otwórz" Click="MenuItem_Click" />
@@ -40,18 +41,20 @@
                 <TextBox x:Name="txboxMaxDistance" Grid.Column="3" HorizontalAlignment="Left" Height="26" Margin="0,0,0,0" Grid.Row="1" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="48" TextAlignment="Center" FontSize="14"/>
                 <Label Content="Wybierz Heurystyke" HorizontalAlignment="Left" Margin="0,0,0,0" Grid.Row="2" VerticalAlignment="Top" Height="26" Width="111"/>
                 <ComboBox x:Name="cboxHeurystyka" Grid.Row="2" Grid.Column="1" Margin="0,0,0,0" ItemsSource="{Binding m_Heurystyka}" SelectionChanged="heurystyka_SelectionChanged" />
-                <Button x:Name="btnOblicz"  Grid.Row="2" Grid.Column="4" Content="Oblicz" Margin="0,0,619,0" HorizontalAlignment="Right" Width="106" Click="Oblicz_Click"/>
-                <Canvas x:Name="canvas" HorizontalAlignment="Left" Height="684" Grid.Row="3" VerticalAlignment="Top" Width="1282" Grid.ColumnSpan="5" Grid.RowSpan="1">
+                <Button x:Name="btnOblicz"  Grid.Row="2" Grid.Column="4" Content="Oblicz" Margin="0,0,11.5,0" HorizontalAlignment="Right" Width="106" Click="Oblicz_Click"/>
+                <Canvas x:Name="canvas" HorizontalAlignment="Left" Height="684" Grid.Row="3" VerticalAlignment="Top" Width="1282" Grid.ColumnSpan="6" Grid.RowSpan="1">
                     <m:Map Grid.Row="1" Grid.RowSpan="3" Name="bingMap" CredentialsProvider="Be3OHm6pgS2WA1QDi0Rr~8JYfIRS-fNWCMmFolCa9Xg~AiCjkWu0uS4fFTwlxDiEEGMqND-gF6wi255eGYTc5AiD3GtHanZv0YOs6bV5MeE0" Visibility="Hidden" Height="370" Width="545" Canvas.Top="10" Canvas.Left="10"/>
-                    <Label x:Name="displayedCities" Canvas.Left="840" Canvas.Top="58" Height="138" Width="400">
-                        <TextBox x:Name="displayedCitiesText" Height="112" TextWrapping="Wrap" Text="" Width="376"/>
-                    </Label>
-                    <Label x:Name="displayedOther" Content="" Canvas.Left="840" Canvas.Top="196" Width="400" Height="65">
-                    </Label>
-                    <TextBox x:Name="displayedOtherText" Height="60" TextWrapping="Wrap" Text="" Width="386" Canvas.Left="840" Canvas.Top="201"/>
                 </Canvas>
+
                 <Label x:Name="labHeurystykaAddon" Content="Liczba scieżek" Grid.Column="2" HorizontalAlignment="Left" Grid.Row="2" VerticalAlignment="Top" Height="26" Width="98" Visibility="Hidden"/>
                 <TextBox x:Name="txboxHeurystykaAddon" Grid.Column="3" HorizontalAlignment="Left" Height="26" Grid.Row="2" TextWrapping="Wrap" Text="1000" VerticalAlignment="Top" TextAlignment="Center" FontSize="14" Width="73" Visibility="Hidden"/>
+                <Button x:Name="btnReset" Grid.Column="5" HorizontalAlignment="Left" Margin="21.5,1,0,0" Grid.Row="2"  Content="Reset" VerticalAlignment="Top" Width="86" Height="25"  Click="Reset_Click"/>
+                <Label x:Name="displayedOther" Grid.Column="5" HorizontalAlignment="Left" Height="126" Margin="21,28,0,0" Grid.Row="3" VerticalAlignment="Top" Width="562">
+                    <TextBox x:Name="displayedOtherText" Height="103" TextWrapping="Wrap" Text="" Width="517" Visibility="Hidden"/>
+                </Label>
+                <Label x:Name="displayedCities" Grid.Column="5" HorizontalAlignment="Left" Height="190" Margin="16,172,0,0" Grid.Row="3" VerticalAlignment="Top" Width="567">
+                    <TextBox x:Name="displayedCitiesText" Height="179" TextWrapping="Wrap" Text="" Width="557" Visibility="Hidden"/>
+                </Label>
 
 
             </Grid>
