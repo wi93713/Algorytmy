@@ -8,7 +8,7 @@ using System.Windows;
 
 namespace Algorytmy2
 {
-    class DijkstraAlgotytm
+    class DijkstraAlgorytm
     {
         public const int NONODESBEFORE = -1;
         public const int NOVISITED = -2;
@@ -22,7 +22,7 @@ namespace Algorytmy2
         private Queue<int> distaneQueue;
         ArrayList[] list;
 
-        public DijkstraAlgotytm(ArrayList[] _list)
+        public DijkstraAlgorytm(ArrayList[] _list)
         {
             list = _list;
             int size = list.Length;
