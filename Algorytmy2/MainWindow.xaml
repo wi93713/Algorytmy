@@ -32,6 +32,9 @@
                             <Separator />
                             <MenuItem Header="_Exit" />
                         </MenuItem>
+                        <MenuItem Header="Trasa A->B"  Name="RouteABMenu">
+                            <MenuItem Header="Znajdź najkrótsza trasę A->B" Click="Trasa_Click" />
+                        </MenuItem>
                     </Menu>
                 </DockPanel>
                 <Label Content="Wybierz Punkt A" VerticalAlignment="Top"  Grid.Row="1" Grid.ColumnSpan="1" Height="26"/>
