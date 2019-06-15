@@ -128,9 +128,11 @@ namespace Algorytmy2
             else
             {
                 // todo
+                bingMap.Visibility = Visibility.Visible;
                 LoadCities(sr);
                 CalcDistances();
-                m_arrIncidentList = DijkstraAlgotytm.setIncidenceList(m_iCitiesCount, m_iCitiesDistance, m_lstCity);
+                m_arrIncidentList = DijkstraAlgorytm.setIncidenceList(m_iCitiesCount, m_iCitiesDistance, m_lstCity);
+                DrawPinsOnBingMap();
                 temp_lstCity = new List<City>(m_lstCity);
             }
         }
@@ -226,11 +228,77 @@ namespace Algorytmy2
 				canvas.Children.Add(ellipse);
 			}
 		}
-		#endregion
+        #endregion
+        ///////////////////////////////////////////////////////////////////////////////
+        /// Dodanie miast na mape
+        private void DrawPolygonOnBingMap(List<City> route, Color color)
+        {
+            MapPolyline polygon = new MapPolyline();
+            polygon.Fill = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Transparent);
+            polygon.Stroke = new System.Windows.Media.SolidColorBrush(color);
+            polygon.StrokeThickness = 5;
+            polygon.Opacity = 0.7;
+            LocationCollection path = new LocationCollection();
+            for (int i = 0; i < route.Count - 2; i++)
+            {
+                if (m_iCitiesDistance[route.ElementAt(i).m_iNumber, route.ElementAt(i + 1).m_iNumber] == 0)
+                {
+                    DijkstraAlgorytm di = new DijkstraAlgorytm(m_arrIncidentList);
+                    int[] pathSD = di.GetPath(route.ElementAt(i).m_iNumber, route.ElementAt(i + 1).m_iNumber);
+                    List<City> dijkstryPath = new List<City>();
+                    if (pathSD != null)
+                    {
+                        //convert from int[] to List<Node>
+                        foreach (var p in pathSD)
+                        {
+                            foreach (var n in m_lstCity)
+                            {
+                                if (n.m_iNumber == p)
+                                {
+                                    dijkstryPath.Add(n);
+                                    break;
+                                }
+                            }
+                        }
 
-		///////////////////////////////////////////////////////////////////////////////
-		/// Obliczenie wszystkich par odległości 
-		private void CalcDistances()
+                        foreach (var p in dijkstryPath)
+                        {
+                            path.Add(new Location(p.X, p.Y));
+                        }
+                    }
+                }
+                else
+                {
+                    path.Add(new Location(route.ElementAt(i).X, route.ElementAt(i).Y));
+                }
+            }
+            foreach (var node in route)
+            {
+
+                path.Add(new Location(node.X, node.Y));
+            }
+            path.Add(path.ElementAt(0)); //i do punktu poczatkowego
+            polygon.Locations = path;
+            bingMap.Children.Add(polygon);
+        }
+
+        private void DrawPinsOnBingMap()
+        {
+            foreach (var node in m_lstCity)
+            {
+                // The pushpin to add to the map.
+                Pushpin pin = new Pushpin();
+                pin.Location = new Location(node.X, node.Y);
+                pin.ToolTip = "Pozycja: " + node.m_iNumber + "\nProfit: " + node.m_iNumber + "\nX: " + node.X + "\nY: " + node.Y;
+                // Adds the pushpin to the map.
+                bingMap.Children.Add(pin);
+            }
+        }
+
+
+        ///////////////////////////////////////////////////////////////////////////////
+        /// Obliczenie wszystkich par odległości 
+        private void CalcDistances()
         {
             m_iCitiesDistance = new double[m_iCitiesCount, m_iCitiesCount];
             m_arrDistances = new double[m_iPointsCount, m_iPointsCount];
@@ -412,7 +480,29 @@ namespace Algorytmy2
             }
             else
             {
-
+                m_iMaxDistance = Int32.Parse(txboxMaxDistance.Text);
+                m_iStartCity = Int32.Parse(cboxPunktStartowy.SelectedItem.ToString());
+                Path path = null;
+                if (m_nHeurystyka == (int)Heurystyka.GRLS)
+                {
+                    path = GreedyRandomLocalSearch();
+                }
+                else
+                {
+                    path = IteratedLocaSearchMethod();
+                }
+                if (m_bFirstPath)
+                {
+                    m_PreviousPath = path;
+                    ShowPath(path, null);
+                    DrawPolygonOnBingMap(path.m_lstVisitedCities, Colors.Blue);
+                    m_bFirstPath = false;
+                }
+                else
+                {
+                    DrawPolygonOnBingMap(path.m_lstVisitedCities, Colors.Red);
+                    ShowPath(m_PreviousPath, path);
+                }
             }
 
         }
