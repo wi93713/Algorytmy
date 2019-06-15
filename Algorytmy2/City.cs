@@ -7,8 +7,19 @@ using System.Threading.Tasks;
 namespace Algorytmy2
 {
     class City
-    {
-        public int		m_iNumber		{ get; set; }	// numer punktu 0,1,2.....
+    {	
+		public City() { }
+		public City(City bestCity)
+		{
+			m_bWasVisited = bestCity.m_bWasVisited;
+			m_iNumber = bestCity.m_iNumber;
+			X = bestCity.X;
+			Y = bestCity.Y;
+			m_sName = bestCity.m_sName;
+			m_dProfit = bestCity.m_dProfit;
+		}
+
+		public int		m_iNumber		{ get; set; }	// numer punktu 0,1,2.....
 		public string	m_sName			{ get; set; }	// nazwa miasta (puste typu danych Punkt) 
         public double	X				{ get; set; }	// Wspolrzedne geograficzne Latidute lub punkt X
         public double	Y				{ get; set; }	// Wspolrzedne geograficzne Longitude lub punkt Y 
@@ -32,6 +43,14 @@ namespace Algorytmy2
 
 		public Path()
 		{
+
+		}
+		public Path(Path t)
+		{
+			m_lstVisitedCities = new List<City>(t.m_lstVisitedCities);
+			m_lstUnvisitedCities = new List<City>(t.m_lstUnvisitedCities);
+			m_dSumProfit = t.m_dSumProfit;
+			m_dSumDistance = t.m_dSumDistance;
 		}
 	}
 }
