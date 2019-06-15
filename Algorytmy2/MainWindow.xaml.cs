@@ -39,7 +39,7 @@ namespace Algorytmy2
         private int m_iMaxDistance = 7600;                      // maksymalna długość ścieżki
         private int m_iStartCity = 1;                           // numer miasta początkowego (wybrane z kontrolki)
 		private int m_Strength = 1;
-
+		private Canvas m_tmpCanvas;
         //********* Deklaracje zmiennych dla danych z mapy Polski*********************
         private int m_iCitiesCount = 0;
         private double[,] m_iCitiesDistance;
@@ -119,6 +119,7 @@ namespace Algorytmy2
 
             if (!m_bDataTypeCity)
             {
+				m_tmpCanvas = new Canvas();
                 LoadPoints(sr);
                 CalcDistances();
                 DrawPointsOnCanvas();
@@ -209,6 +210,8 @@ namespace Algorytmy2
 		private void DrawPointsOnCanvas()
 		{
 			double maxProfit = m_lstCity.Max(x => x.m_dProfit);
+			//m_tmpCanvas.Height =  m_lstCity.Max(x => x.X) + 2;
+			//m_tmpCanvas.Width = m_lstCity.Max(x => x.Y) + 2;
 			canvas.Height = m_lstCity.Max(x => x.X) + 2;
 			canvas.Width = m_lstCity.Max(x => x.Y) + 2;
 			SolidColorBrush mySolidColorBrush = new SolidColorBrush();
@@ -221,6 +224,7 @@ namespace Algorytmy2
 				Canvas.SetLeft(ellipse, point.X * GRADUATION);
 				Canvas.SetTop(ellipse, point.Y * GRADUATION);
 				canvas.Children.Add(ellipse);
+				//m_tmpCanvas.Children.Add(ellipse);
 			}
 		}
 		#endregion
@@ -321,6 +325,14 @@ namespace Algorytmy2
             displayedOtherText.Text = displayedInfo;
             displayedOtherText.Visibility = Visibility.Visible;
             displayedCitiesText.Visibility = Visibility.Visible;
+			if(CalcDistance(path.m_lstVisitedCities)  == path.m_dSumDistance)
+			{
+				int a = 5;
+			}
+			else
+			{
+				int a = 5;
+			}
             if (path2 != null)
             {
                 CheckTwoPatch(path.m_lstVisitedCities, path2.m_lstVisitedCities);
@@ -328,7 +340,7 @@ namespace Algorytmy2
                 CheckLenAndProfit(path.m_lstVisitedCities, path2.m_lstVisitedCities, out dProfit1, out dProfit2, out dDistance1, out dDistance2);
                 if (path.m_dSumDistance == dDistance1 && path2.m_dSumDistance == dDistance2)
                 {
-                    // ok
+					
                 }
                 else
                 {
@@ -551,13 +563,13 @@ namespace Algorytmy2
             {
                 lstRouts.Add(MetodaGreedyRand());
             }
-           // lstRouts = lstRouts.OrderByDescending(x => x.m_dSumProfit).ToList();
+            lstRouts = lstRouts.OrderByDescending(x => x.m_dSumProfit).ToList();
             Path best = lstRouts.ElementAt(0);
             Path newPath = null;
             i = 0;
             foreach (Path p in lstRouts)
             {
-                if (i < 50)
+                if (i < 40)
                 {
 					newPath = LocalSearch(p);
                 }          
