@@ -45,6 +45,7 @@ namespace Algorytmy2
         //********* Deklaracje zmiennych tylko dla danych punktówych******************
         private int m_iPointsCount = 0;                 // liczba punktów
         private double[,] m_arrDistances;               // tablica odległości NxN
+		private int[,] m_arrPrevious;					// tablica poprzedników
 		private int m_iPath = 0;						// liczba galezi 
 
         private const string m_sHeurystyka1 = "Metoda Greed Random + LocalSearch";
@@ -210,6 +211,7 @@ namespace Algorytmy2
 			
             }
 			 m_arrDistances = new double[m_iPointsCount, m_iPointsCount];
+			m_arrPrevious = new int[m_iPointsCount, m_iPointsCount];
 			m_iPath = Convert.ToInt32(sr.ReadLine());
 			for (int i = 0; i < m_iPath-1; i++)
 			{
