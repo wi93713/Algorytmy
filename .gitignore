@@ -17,3 +17,4 @@ packages/System.Collections.4.3.0/ref/netcore50/it/System.Collections.xml
 packages/Microsoft.NETCore.Platforms.1.1.0/.signature.p7s
 packages/Microsoft.NETCore.Platforms.1.1.0/dotnet_library_license.txt
 packages/Microsoft.NETCore.Platforms.1.1.0/lib/netstandard1.0/_._
+*.cs
