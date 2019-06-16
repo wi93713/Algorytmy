@@ -131,6 +131,8 @@ namespace Algorytmy2
                 LoadCities(sr);
                 //CalcDistancesCities();
                 m_arrIncidentList = DijkstraAlgorytm.setIncidenceList(m_iPointsCount, m_arrDistances, m_lstCity);
+				for(int i = 0; i < 105; i++)
+					Dijkstry(m_arrIncidentList, m_iPointsCount, i);
                 DrawPinsOnBingMap();
                 temp_lstCity = new List<City>(m_lstCity);
             }
@@ -330,9 +332,71 @@ namespace Algorytmy2
                 }
             }
         }
+		double DOUBLE_MAX = double.MaxValue;
+		// kodzik z c++ na c# :(
+		int[] arrPrevious = new int[202];
+		double[] arrLenght = new double[202];
+		bool[] arrWas = new bool[202];
+		bool Dijkstry(ArrayList[] arrCity, int n, int CityA)
+		{
+			SortedDictionary<double, List<int>> priorityQue = new SortedDictionary<double, List<int>>();
+			//priority_queue<iPair, vector<iPair>, greater<iPair>> priorityQue;
+			for (int i = 0; i < n; i++)
+			{
+				arrLenght[i] = DOUBLE_MAX;
+				arrPrevious[i] = 0;
+				arrWas[i] = false;
+			}
+			priorityQue.Add(0, new List<int>() { CityA });
+			arrLenght[CityA] = 0;
+			while (priorityQue.Count != 0)
+			{
+						 // ściągniecie punktu o najmniejszej wadze
+				double k = priorityQue.Keys.First();
+				var lstIndex = priorityQue[k];
+				int v = lstIndex.First();
+				if (lstIndex.Count == 1)
+					priorityQue.Remove(k);
+				else
+					lstIndex.Remove(lstIndex.First());
+				if (arrWas[v])
+					continue;
+				arrWas[v] = true;
+				foreach(Node it in arrCity[v])
+				{
+					if (arrLenght[v] + it.Cost < arrLenght[it.Index])
+					{
+						if (!arrWas[it.Index])
+						{
+							arrLenght[it.Index] = arrLenght[v] + it.Cost;
+							arrPrevious[it.Index] = v;
+							try
+							{
+								priorityQue.Add(arrLenght[it.Index], new List<int>() { it.Index });
+							}
+							catch( Exception ex)
+							{
+								var auto = priorityQue[arrLenght[it.Index]];
+								auto.Add(it.Index);
+							}
+						}
+						/*arrLenght[it->first] = arrLenght[v] + it->second;
+						arrPrevious[it->first] = v;
+						priorityQue.push(make_pair(arrLenght[it->first], it->first));*/
+					}
+				}
+			}
+			for (int i = 0; i < m_iPointsCount; i++) 
+			{
+				m_arrDistances[CityA, i] = arrLenght[i];
+				m_arrDistances[i, CityA] = arrLenght[i];
+			}
+			
+			return true;
+		}
 		///////////////////////////////////////////////////////////////////////////////
-        /// Obliczenie wszystkich par odległości 
-        private void CalcDistancesCities()
+		/// Obliczenie wszystkich par odległości 
+		private void CalcDistancesCities()
         {
             m_arrDistances = new double[m_iPointsCount, m_iPointsCount];
             for (int i = 0; i < m_iPointsCount; i++)
