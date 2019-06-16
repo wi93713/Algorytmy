@@ -287,6 +287,11 @@ namespace Algorytmy2
 
                         foreach (var p in dijkstryPath)
                         {
+                            if (p = dijkstryPath.ElementAt(m_iPointsCount - 3)
+                            {
+                                break;
+                            }
+                            else
                             path.Add(new Location(p.X, p.Y));
                         }
                     }
