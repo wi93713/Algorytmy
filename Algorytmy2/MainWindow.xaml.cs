@@ -40,6 +40,8 @@ namespace Algorytmy2
         private int m_iStartCity = 1;                           // numer miasta początkowego (wybrane z kontrolki)
 		private int m_Strength = 1;
 		private Canvas m_tmpCanvas;
+		private int m_IleZmian = 0;							// 0 do 95; puntków
+		
         //********* Deklaracje zmiennych dla danych z mapy Polski*********************
 
         //********* Deklaracje zmiennych tylko dla danych punktówych******************
@@ -199,7 +201,7 @@ namespace Algorytmy2
                         m_iNumber = i,
                         X = Double.Parse(arrLine[3], NumberStyles.Float, CultureInfo.InvariantCulture),
                         Y = Double.Parse(arrLine[4], NumberStyles.Float, CultureInfo.InvariantCulture),
-                        m_dProfit = Convert.ToDouble(arrLine[2]),
+                        m_dProfit = Convert.ToDouble(arrLine[2])*0.1,
                         m_bWasVisited = false,
                         m_sName = Convert.ToString(arrLine[1])
 
@@ -311,7 +313,7 @@ namespace Algorytmy2
                 // The pushpin to add to the map.
                 Pushpin pin = new Pushpin();
                 pin.Location = new Location(city.X, city.Y);
-                pin.ToolTip = city.m_sName + "\nPozycja: " + city.m_iNumber + "\nProfit: " + city.m_iNumber + "\nX: " + city.X + "\nY: " + city.Y;
+                pin.ToolTip = city.m_sName + "\nPozycja: " + city.m_iNumber + "\nProfit: " + city.m_dProfit + "\nX: " + city.X + "\nY: " + city.Y;
                 // Adds the pushpin to the map.
                 bingMap.Children.Add(pin);
             }
@@ -700,7 +702,7 @@ namespace Algorytmy2
         {
 			int n = 1;
             if (n > 500) n = 500;
-			int m = 250;
+			int m = 500;
             Path modifiedPath2 = IteratedLocaSearch(n, m);
             m_lstUnvisitedCities = modifiedPath2.m_lstUnvisitedCities;
             m_lstUnvisitedCities.Insert(0, m_lstCity.ElementAt(m_iStartCity));
@@ -771,9 +773,8 @@ namespace Algorytmy2
 
 		private Path Disturb(Path t)
 		{
-			for (int i = 0; i < (m_Strength > 2 ? 2 : 1); i++)
+			for (int i = 0; i < (m_Strength > 1 ? 1 : 1); i++)
 			{
-				
 				double min = t.m_lstVisitedCities.Min(x => x.m_dProfit);
 				City tmpCity = t.m_lstVisitedCities.First(x => x.m_dProfit == min);
 				if (tmpCity.m_iNumber == m_iStartCity)
