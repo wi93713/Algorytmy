@@ -1,4 +1,4 @@
-﻿<Window x:Class="Algorytmika2.DijsktryWindow"
+﻿<Window x:Class="Algorytmy2.DijsktryWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -39,8 +39,8 @@
                     </Grid>
                 </GroupBox>
 
-                <Button Content="Oblicz" Grid.Row="2" Grid.Column="1" Margin="5" Padding="5" />
-                <Button Content="Anuluj" Grid.Row="2" Grid.Column="2" Margin="5" Padding="5" />
+                <Button Content="Oblicz" Grid.Row="2" Grid.Column="1" Margin="5" Padding="5" Click="Button_Click_1"/>
+                <Button Content="Anuluj" Grid.Row="2" Grid.Column="2" Margin="5" Padding="5" Click="Button_Click" />
 
 
 
