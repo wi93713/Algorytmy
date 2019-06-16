@@ -702,7 +702,7 @@ namespace Algorytmy2
         {
 			int n = 1;
             if (n > 500) n = 500;
-			int m = 500;
+			int m = 2000;
             Path modifiedPath2 = IteratedLocaSearch(n, m);
             m_lstUnvisitedCities = modifiedPath2.m_lstUnvisitedCities;
             m_lstUnvisitedCities.Insert(0, m_lstCity.ElementAt(m_iStartCity));
@@ -727,12 +727,14 @@ namespace Algorytmy2
 					t = LocalSearch(t);
 					if(t.m_dSumProfit > bestPath.m_dSumProfit && t.m_dSumDistance <= m_iMaxDistance)
 					{
+						m_IleZmian = 0;
 						m_Strength = 1;
 						noProgres1 = 0;
 						bestPath = new Path(t);
 					}
 					else
-					{ 
+					{
+						m_IleZmian++;
 						noProgres1++;
 						if (noProgres1 == 40)
 							m_Strength++;
@@ -752,14 +754,16 @@ namespace Algorytmy2
 					if(t.m_dSumProfit > tlok.m_dSumProfit && t.m_dSumDistance <= m_iMaxDistance)
 					{
 						m_Strength--;
+						m_IleZmian--;
 						if (m_Strength == 0)
 							m_Strength = 1;
 						noProgres2 = 0;
 						tlok = new Path(t);
 					}
 					else
-					{ 
+					{
 						noProgres2++;
+						//m_IleZmian++;
 						if (noProgres2 == 10 || noProgres2 == 20 || noProgres2 == 40)
 							m_Strength++;
 						//if (noProgres2 > 100 && m_Strength < 6 )
@@ -770,34 +774,52 @@ namespace Algorytmy2
 			}
 			return bestPath;
 		}
+		private Path FindAndRemoveNajslabszyCity(Path t)
+		{
+			City toRemove = t.m_lstVisitedCities.ElementAt(1);
+			int IndexGlobal = 1;
+			double ProfitPerDistance = toRemove.m_dProfit / (m_arrDistances[0, 1] + m_arrDistances[1, 2] - m_arrDistances[0,2]);
+			for(int i = 1; i< t.m_lstVisitedCities.Count - 2; i++)
+			{
+				City slaby = t.m_lstVisitedCities.ElementAt(i);
+				int Index = toRemove.m_iNumber;
+				City NextCity = t.m_lstVisitedCities.ElementAt(i + 1);
+				City PrevCity = t.m_lstVisitedCities.ElementAt(i - 1);
+				double tempProfit =  toRemove.m_dProfit / (m_arrDistances[PrevCity.m_iNumber, slaby.m_iNumber]
+					+ m_arrDistances[Index, NextCity.m_iNumber] - m_arrDistances[PrevCity.m_iNumber,NextCity.m_iNumber]);
+				if (tempProfit < ProfitPerDistance)
+				{
+					IndexGlobal = i;
+					toRemove = new City(slaby);
+					ProfitPerDistance = tempProfit;
+				}
 
+			}
+			City NextCity1 = t.m_lstVisitedCities.ElementAt(IndexGlobal + 1);
+			City PrevCity1 = t.m_lstVisitedCities.ElementAt(IndexGlobal - 1);
+			t.m_dSumDistance = t.m_dSumDistance - (m_arrDistances[PrevCity1.m_iNumber, toRemove.m_iNumber] +
+				m_arrDistances[toRemove.m_iNumber, NextCity1.m_iNumber] - m_arrDistances[PrevCity1.m_iNumber, NextCity1.m_iNumber]);
+			t.m_dSumProfit = t.m_dSumProfit - toRemove.m_dProfit;
+			t.m_lstVisitedCities.RemoveAt(IndexGlobal);
+			t.m_lstUnvisitedCities.Add(toRemove);
+			return t;
+
+		}
 		private Path Disturb(Path t)
 		{
-			for (int i = 0; i < (m_Strength > 1 ? 1 : 1); i++)
+			for (int i = 0; i < (m_Strength < 1 ? 1 : 1); i++)
 			{
-				double min = t.m_lstVisitedCities.Min(x => x.m_dProfit);
-				City tmpCity = t.m_lstVisitedCities.First(x => x.m_dProfit == min);
-				if (tmpCity.m_iNumber == m_iStartCity)
-				{
-					break;
-				}
-				int Index = t.m_lstVisitedCities.IndexOf(tmpCity);
-				City NextCity = t.m_lstVisitedCities.ElementAt(Index + 1);
-				City PrevCity = t.m_lstVisitedCities.ElementAt(Index - 1);
-
-				t.m_dSumDistance = t.m_dSumDistance - m_arrDistances[tmpCity.m_iNumber, NextCity.m_iNumber] - m_arrDistances[tmpCity.m_iNumber, PrevCity.m_iNumber]
-					+ m_arrDistances[NextCity.m_iNumber, PrevCity.m_iNumber];
-				t.m_dSumProfit -= tmpCity.m_dProfit;
-				t.m_lstVisitedCities.Remove(tmpCity);
-				t.m_lstUnvisitedCities.Add(tmpCity);
+				t = FindAndRemoveNajslabszyCity(t);
 			}
-			t.m_lstUnvisitedCities = t.m_lstUnvisitedCities.OrderByDescending(x => x.m_dProfit).ToList();
+			//t.m_lstUnvisitedCities = t.m_lstUnvisitedCities.OrderByDescending(x => x.m_dProfit).ToList();
 			List<City> RemovedCities = new List<City>();
 			if (m_Strength > 2)
 			{
-				for (int i = 0; i < m_Strength - 2; i++)
+				if (m_IleZmian > 95)
+					m_IleZmian = t.m_lstUnvisitedCities.Count - 1;
+				for (int i = 0; i < m_IleZmian - 2; i++)
 				{
-					int max = t.m_lstVisitedCities.Count - 2 > i * 50 + 50 ? i * 50 + 50 - i : t.m_lstVisitedCities.Count - 2 - i;
+					int max = t.m_lstVisitedCities.Count - 2;// > i * 50 + 50 ? i * 50 + 50 - i : t.m_lstVisitedCities.Count - 3;
 					int iRemove = m_random.Next(1, max);
 					City tmpCity = t.m_lstVisitedCities.ElementAt(iRemove);
 					t.m_dSumProfit -= t.m_lstVisitedCities.ElementAt(iRemove).m_dProfit;
@@ -816,6 +838,8 @@ namespace Algorytmy2
 					}
 					RemovedCities.Add(tmpCity);
 				}
+				if (m_IleZmian > 95)
+					m_IleZmian = 1;
 			}
 			t.m_lstUnvisitedCities.AddRange(RemovedCities);
 			return t;
